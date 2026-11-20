@@ -1,0 +1,27 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <pigpiod_if2.h>
+
+#define LED_ROUGE 5
+
+int main(void)
+{
+    int pi = pigpio_start(NULL, NULL);   /* connexion au service pigpiod */
+    if (pi < 0)
+    {
+        printf("Impossible de se connecter a pigpiod\n");
+        exit(1);
+    }
+    set_mode(pi, LED_ROUGE, PI_OUTPUT);
+
+    for(int i=0; i<10; i++)                                /* répéte 10 fois */
+    {
+        gpio_write(pi, LED_ROUGE, PI_HIGH);  /* allume */
+        time_sleep(1);                     /* attend 1 s */
+        gpio_write(pi, LED_ROUGE, PI_LOW);   /* éteint */
+        time_sleep(0.2);                   /* attend 0.2s */
+    }
+
+    pigpio_stop(pi);
+    return 0;
+}

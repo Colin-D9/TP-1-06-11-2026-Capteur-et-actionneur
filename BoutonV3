@@ -1,0 +1,54 @@
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <pigpiod_if2.h> 
+ 
+#define BOUTON_A 20 
+#define BOUTON_B 21
+ 
+int main(void) 
+{ 
+    int pi = pigpio_start(NULL, NULL);   /* connexion au service pigpiod */ 
+    if (pi < 0) 
+    { 
+        printf("Impossible de se connecter a pigpiod\n"); 
+        exit(1); 
+    } 
+    set_mode(pi, BOUTON_A, PI_INPUT); 
+    set_pull_up_down(pi, BOUTON_A, PI_PUD_UP); 
+	
+	set_mode(pi, BOUTON_B, PI_INPUT); 
+    set_pull_up_down(pi, BOUTON_B, PI_PUD_UP); 
+ 
+    int etat1; 
+    int etat2;
+    int etat_precedent1 = PI_HIGH; 
+	int etat_precedent2 = PI_HIGH; 
+    int compteur1 = 0; 
+	int compteur2 = 0;
+ 
+    while (1) 
+    { 
+        etat1 = gpio_read(pi, BOUTON_A); 
+		
+		etat2 = gpio_read(pi, BOUTON_B); 
+ 
+        if (etat1 == PI_LOW && etat_precedent1 == PI_HIGH)   /* && signifie ET */ 
+        { 
+            compteur1 = compteur1 + 1; 
+            printf("Appuis Bouton A : %d\n", compteur1); 
+        } 
+		
+		if (etat2 == PI_LOW && etat_precedent2 == PI_HIGH)   /* && signifie ET */ 
+        { 
+            compteur2 = compteur2 + 1; 
+            printf("Appuis Bouton B : %d\n", compteur2); 
+        } 
+ 
+        etat_precedent1 = etat1; 
+		etat_precedent2 = etat2; 
+		time_sleep(0.02);
+    } 
+ 
+    pigpio_stop(pi); 
+    return 0; 
+} 
