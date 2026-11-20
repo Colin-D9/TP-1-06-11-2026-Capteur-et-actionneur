@@ -1,0 +1,75 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <pigpiod_if2.h>
+
+#define LED_ROUGE 5
+#define LED_JAUNE 12
+#define LED_VERTE 19
+
+#define BOUTON_A 20
+#define BOUTON_B 21
+
+int main(void)
+{
+    int pi = pigpio_start(NULL, NULL);
+
+    if (pi < 0)
+    {
+        printf("Impossible de se connecter a pigpiod\n");
+        exit(1);
+    }
+
+    // Configuration des LEDs
+    set_mode(pi, LED_ROUGE, PI_OUTPUT);
+    set_mode(pi, LED_JAUNE, PI_OUTPUT);
+    set_mode(pi, LED_VERTE, PI_OUTPUT);
+
+    // Configuration des boutons
+    set_mode(pi, BOUTON_A, PI_INPUT);
+    set_mode(pi, BOUTON_B, PI_INPUT);
+
+    set_pull_up_down(pi, BOUTON_A, PI_PUD_UP);
+    set_pull_up_down(pi, BOUTON_B, PI_PUD_UP);
+
+    // Tableau contenant les GPIO des LEDs
+    int leds[3] = {5, 12, 19};
+
+    int i;
+    double attente = 0.3;
+
+    while (1)
+    {
+        for (i = 0; i < 3; i++)
+        {
+            // Bouton A : accelerer
+            if (gpio_read(pi, BOUTON_A) == PI_LOW)
+            {
+                if (attente > 0.05)
+                {
+                    attente = attente - 0.05;
+                }
+            }
+
+            // Bouton B : ralentir
+            if (gpio_read(pi, BOUTON_B) == PI_LOW)
+            {
+                if (attente < 1.0)
+                {
+                    attente = attente + 0.05;
+                }
+            }
+
+            // Allumer la LED
+            gpio_write(pi, leds[i], PI_HIGH);
+
+            time_sleep(attente);
+
+            // Eteindre la LED
+            gpio_write(pi, leds[i], PI_LOW);
+        }
+    }
+
+    pigpio_stop(pi);
+
+    return 0;
+}
